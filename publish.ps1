@@ -381,6 +381,8 @@ function ProcessTemplates()
 	}
 }
 
+cd ..
+
 if ($GenerateWebsite -or $GenerateJsnLog -or $GenerateEverything -or $UpdateVersions)
 {
 	ProcessTemplates
@@ -412,6 +414,8 @@ if ($GenerateWebsite -or $GenerateEverything)
 {
 	Generate-Website $Publish
 }
+
+cd jsnlog.Build
 
 Exit
 
