@@ -329,7 +329,7 @@ function Generate-Website($publishing)
 		#
 		# Make sure that the goodsync program is installed, and its .exe added to the
 		# path environment setting
-		goodsync /exit-ifok sync "jsnlog web site" 
+		goodsync-v9 /exit-ifok sync "jsnlog web site" 
 	}
 
 	cd ..
