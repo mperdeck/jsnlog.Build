@@ -128,10 +128,10 @@ function Generate-JsnlogJs($publishing)
 				
 		# Push to Github		
 		git tag v$version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog.js.git --tags
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git --tags
 
 		git branch $version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog.js.git --all
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git --all
 
 		# About Bower and Component
 		#
@@ -165,10 +165,10 @@ function Generate-JsnlogNodeJs($publishing)
 				
 		# Push to Github		
 		git tag v$version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog-nodejs.git --tags
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git --tags
 
 		git branch $version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog-nodejs.git --all
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git --all
 
 		# Push to NPM
 		# Note that you have to register with NPM once, with the command
@@ -236,10 +236,10 @@ function Generate-Jsnlog($publishing)
 				
 		# Push to Github		
 		git tag v$version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog.git --tags
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git --tags
 
 		git branch $version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog.git --all
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git --all
 	}
 
 	cd ..
@@ -271,7 +271,7 @@ function Generate-JsnlogConfigurations($publishing)
 				
 		# Push to Github		
 		git branch $version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog.configurations.git --all
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.configurations.git --all
 	}
 
 	cd ..
@@ -295,7 +295,7 @@ function Generate-JsnlogSimpleWorkingDemos($publishing)
 				
 		# Push to Github		
 		git branch $version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlogSimpleWorkingDemos.git --all
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlogSimpleWorkingDemos.git --all
 	}
 
 	cd ..
@@ -341,10 +341,10 @@ function Generate-Website($publishing)
 				
 		# Push to Github		
 		git tag v$version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog.website.git --tags
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.website.git --tags
 
 		git branch $version
-		git push https://$githubUsername:$githubPassword@github.com/$githubUsername/jsnlog.website.git --all
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.website.git --all
 	}
 
 	cd ..
