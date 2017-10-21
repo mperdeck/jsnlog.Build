@@ -22,12 +22,21 @@ Param(
   [Parameter(Mandatory=$False, HelpMessage="Publishes those components that will be generated")]
   [switch]$Publish,
 
+  [Parameter(Mandatory=$False, HelpMessage="Logging verbosity")]
+  [ValidateSet('quiet','minimal','normal','detailed','diagnostic')]
+  [System.String]$LoggingVerbosity = 'minimal',
+
   [Parameter(Mandatory=$False, HelpMessage="Only shows which actions will be taken, does not do anything")]
   [switch]$WhatIf
 )
 
 # include nuget key
 ."..\..\keys.ps1"
+
+
+$nugetLoggingVerbosity = $LoggingVerbosity
+if ($nugetLoggingVerbosity -eq 'minimal') { $nugetLoggingVerbosity = 'quiet' } 
+if ($nugetLoggingVerbosity -eq 'diagnostic') { $nugetLoggingVerbosity = 'detailed' } 
 
 if ($version -like '-')
 {
@@ -211,15 +220,15 @@ function Generate-Jsnlog($publishing)
 	# Build the jsnlog.AspNetCore package
 	# msbuild /t:pack uses the package definition inside the jsnlog.csproj file
 	Write-SubActionHeading "Build the jsnlog.AspNetCore package"
-	msbuild /t:Clean /p:Configuration=Release
-	msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$version /p:BuildFor=Core
+	msbuild /t:Clean /p:Configuration=Release /verbosity:$LoggingVerbosity
+	msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$version /p:BuildFor=Core /verbosity:$LoggingVerbosity
     Move-Item bin\release\*.nupkg C:\Dev\@NuGet\GeneratedPackages
 
 	# Build the jsnlog package
 	Write-SubActionHeading "Build the jsnlog package"
-	msbuild /p:Configuration=Release /p:PackageVersion=$version /p:BuildFor=NetFramework /t:Rebuild
-    nuget pack JSNLog.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages -Version $version
-    nuget pack JSNLog.ClassLibrary.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages -Version $version
+	msbuild /p:Configuration=Release /p:PackageVersion=$version /p:BuildFor=NetFramework /t:Rebuild /verbosity:$LoggingVerbosity
+    nuget pack JSNLog.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages -Version $version -Verbosity normal
+    nuget pack JSNLog.ClassLibrary.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages -Version $version -Verbosity normal
 	
 	if ($publishing) 
 	{ 
@@ -320,7 +329,7 @@ function Generate-Website($publishing)
 	# This publishes the Website project, using the publish profile "jsnlog".
 	# This publishes to 
 	# C:\Web sites\jsnlog
-	msbuild WebSite.csproj /p:DeployOnBuild=true /p:PublishProfile=jsnlog /p:VisualStudioVersion=15.0 /p:Configuration=Release
+	msbuild WebSite.csproj /p:DeployOnBuild=true /p:PublishProfile=jsnlog /p:VisualStudioVersion=15.0 /p:Configuration=Release /verbosity:$LoggingVerbosity
 
 	if ($publishing) 
 	{ 
