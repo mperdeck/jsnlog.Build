@@ -80,9 +80,11 @@ Function ApplyVersion([string]$templatePath)
 
 Function GenerateConfigPackage([string]$packageName, $publishing)
 {
+	cd FinalPackages
 	cd $packageName
 	nuget pack $packageName.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages
 	if ($publishing) { nuget push C:\Dev\@NuGet\GeneratedPackages\$packageName.$version.nupkg $apiKey -Source https://api.nuget.org/v3/index.json }
+	cd ..
 	cd ..
 }
 
