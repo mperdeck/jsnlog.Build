@@ -33,7 +33,6 @@ Param(
 # include nuget key
 ."..\..\keys.ps1"
 
-
 $nugetLoggingVerbosity = $LoggingVerbosity
 if ($nugetLoggingVerbosity -eq 'minimal') { $nugetLoggingVerbosity = 'quiet' } 
 if ($nugetLoggingVerbosity -eq 'diagnostic') { $nugetLoggingVerbosity = 'detailed' } 
@@ -219,24 +218,16 @@ function Generate-Jsnlog($publishing)
 		Remove-Item C:\Users\$windowsUsername\.nuget\packages\jsnlog.aspnetcore -Force -Recurse
 	}
 	
-	# Build the jsnlog.AspNetCore package
+	# Build the jsnlog package
 	# msbuild /t:pack uses the package definition inside the jsnlog.csproj file
-	Write-SubActionHeading "Build the jsnlog.AspNetCore package"
-	msbuild /t:Clean /p:Configuration=Release /verbosity:$LoggingVerbosity
-	msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$version /p:BuildFor=Core /verbosity:$LoggingVerbosity
+	Write-SubActionHeading "Build the jsnlog package"
+	& msbuild /t:Clean /p:Configuration=Release /verbosity:$LoggingVerbosity
+	& msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$version /verbosity:$LoggingVerbosity
     Move-Item bin\release\*.nupkg C:\Dev\@NuGet\GeneratedPackages
 
-	# Build the jsnlog package
-	Write-SubActionHeading "Build the jsnlog package"
-	msbuild /p:Configuration=Release /p:PackageVersion=$version /p:BuildFor=NetFramework /t:Rebuild /verbosity:$LoggingVerbosity
-    nuget pack JSNLog.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages -Version $version -Verbosity normal
-    nuget pack JSNLog.ClassLibrary.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages -Version $version -Verbosity normal
-	
 	if ($publishing) 
 	{ 
-		nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.AspNetCore.$version.nupkg $apiKey -Source https://api.nuget.org/v3/index.json 
-		nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$version.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
-		nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.ClassLibrary.$version.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
+		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$version.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
 	}
 
 	cd ..
@@ -266,7 +257,7 @@ function Generate-JsnlogConfigurations($publishing)
 
 	cd jsnlog.configurations
 
-	# Upload Nuget package for NLog version
+	& .\generate.ps1
 
 	GenerateConfigPackage "JSNLog.NLog" $publishing
 	GenerateConfigPackage "JSNLog.Log4Net" $publishing
