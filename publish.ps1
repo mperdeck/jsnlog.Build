@@ -228,16 +228,16 @@ function Generate-Jsnlog($publishing)
 	& msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$version /verbosity:$LoggingVerbosity
 
     # Build final versions of JSNLog.ClassLibrary and JSNLog.AspNetCore
-	& msbuild /t:pack /p:Configuration=Release /p:PackageId=JSNLog.ClassLibrary /p:PackageVersion=99.0.0 /p:Description="DO NOT USE. Instead simply use the JSNLog package." /verbosity:$LoggingVerbosity
-	& msbuild /t:pack /p:Configuration=Release /p:PackageId=JSNLog.AspNetCore /p:PackageVersion=99.0.0 /p:Description="DO NOT USE. Instead simply use the JSNLog package." /verbosity:$LoggingVerbosity
+#	& msbuild /t:pack /p:Configuration=Release /p:PackageId=JSNLog.ClassLibrary /p:PackageVersion=99.0.0 /p:Description="DO NOT USE. Instead simply use the JSNLog package." /verbosity:$LoggingVerbosity
+#	& msbuild /t:pack /p:Configuration=Release /p:PackageId=JSNLog.AspNetCore /p:PackageVersion=99.0.0 /p:Description="DO NOT USE. Instead simply use the JSNLog package." /verbosity:$LoggingVerbosity
 
     Move-Item bin\release\*.nupkg C:\Dev\@NuGet\GeneratedPackages
 
 	if ($publishing) 
 	{ 
 		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$version.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
-		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.ClassLibrary.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
-		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.AspNetCore.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
+#		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.ClassLibrary.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
+#		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.AspNetCore.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
 	}
 
 	cd ..
