@@ -157,6 +157,9 @@ function Generate-JsnlogJs($publishing)
 		# Push to NPM
 		# Note that you have to register with NPM once, with the command
 		# npm adduser
+		# 
+		# If later on NPM  does not recongise you, login again to NPM on your machine, using:
+		# npm login
 		
 		npm publish .
 	} 
