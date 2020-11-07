@@ -324,20 +324,21 @@ function Generate-Website($publishing)
 	Copy-Item "C:\Dev\JSNLog\jsnlog\\jsnlog\bin\Release\net452\JSNLog.dll" ..\Dependencies
 
     # Backup the existing site in the %temp% dir
-    Copy-Item "G:\Web sites\jsnlog" $env:temp\jsnlog.$(get-date -f yyyyMMddTHHmmss) -Recurse
+	$websiteFolderPath = "E:\Web sites\jsnlog"
+	if (Test-Path -Path $websiteFolderPath) { Copy-Item $websiteFolderPath $env:temp\jsnlog.$(get-date -f yyyyMMddTHHmmss) -Recurse }
 
-	# C:\Program Files (x86)\MSBuild\14.0\Bin
+	# C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
 	# has to be in the path for powershell to find msbuild
 	#
 	# This publishes the Website project, using the publish profile "jsnlog".
 	# This publishes to 
-	# C:\Web sites\jsnlog
+	# E:\Web sites\jsnlog
 	msbuild WebSite.csproj /p:DeployOnBuild=true /p:PublishProfile=jsnlog /p:VisualStudioVersion=15.0 /p:Configuration=Release /verbosity:$LoggingVerbosity
 
 	if ($publishing) 
 	{ 
 		# Assumes there is a job "jsnlog web site" defined in goodsync,
-		# which uploads the files C:\Web sites\jsnlog to the web server at ftp://ftp.jsnlog.com/httpdocs
+		# which uploads the files E:\Web sites\jsnlog to the web server at ftp://ftp.jsnlog.com/httpdocs
 		#
 		# Make sure that the goodsync program is installed, and its .exe added to the
 		# path environment setting
