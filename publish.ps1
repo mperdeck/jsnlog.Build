@@ -80,6 +80,16 @@ Function ApplyVersion([string]$templatePath)
     Write-Host "Updated version in : $filePath"
 }
 
+Function GenerateConfigPackage([string]$packageName, $publishing)
+{
+	cd FinalPackages
+	cd $packageName
+	nuget pack $packageName.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages
+	if ($publishing) { nuget push C:\Dev\@NuGet\GeneratedPackages\$packageName.$version.nupkg $apiKey -Source https://api.nuget.org/v3/index.json }
+	cd ..
+	cd ..
+}
+
 function Expand-ZIPFile($file, $destination)
 {
 	$shell = new-object -com shell.application
@@ -250,6 +260,38 @@ function Generate-Jsnlog($publishing)
 	cd ..
 }
 
+function Generate-JsnlogConfigurations($publishing)
+{
+	# JSNLog itself and jsnlog.js must be processed before processing jsnlog.configurations,
+	# because configurations relies on files compiled in the earlier steps.
+
+	Write-ActionHeading "Generate-JsnlogConfigurations" $publishing
+	if ($WhatIf) { return }
+
+	cd jsnlog.configurations
+
+	& .\generate.ps1
+
+	GenerateConfigPackage "JSNLog.NLog" $publishing
+	GenerateConfigPackage "JSNLog.Log4Net" $publishing
+	GenerateConfigPackage "JSNLog.Elmah" $publishing
+	GenerateConfigPackage "JSNLog.CommonLogging" $publishing
+	GenerateConfigPackage "JSNLog.Serilog" $publishing
+
+	if ($publishing) 
+	{ 
+		# Commit any changes and deletions (but not additions) to Github
+
+		git commit -a -m "$version"
+				
+		# Push to Github		
+		git branch $version
+		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.configurations.git --all
+	}
+
+	cd ..
+}
+
 function Generate-JsnlogSimpleWorkingDemos($publishing)
 {
 	# ---------------
@@ -380,6 +422,7 @@ if ($GenerateJsnLog -or $GenerateEverything)
 
 if ($GenerateEverything) 
 {
+	Generate-JsnlogConfigurations $Publish
 	Generate-JsnlogSimpleWorkingDemos $Publish
 }
 
