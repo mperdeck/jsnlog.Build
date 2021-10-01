@@ -36,6 +36,9 @@ Param(
 # include nuget key
 ."..\..\keys.ps1"
 
+# include generator constants
+."..\jsnlog.SimpleWorkingDemoGenerator\Generator\helpers\GeneratorConstants.ps1"
+
 $nugetLoggingVerbosity = $LoggingVerbosity
 if ($nugetLoggingVerbosity -eq 'minimal') { $nugetLoggingVerbosity = 'quiet' } 
 if ($nugetLoggingVerbosity -eq 'diagnostic') { $nugetLoggingVerbosity = 'detailed' } 
@@ -60,6 +63,7 @@ if ($UpdateVersions -And $Publish)
 # Constants
 
 $versionPlaceholder = "__Version__"
+$frameworkVersionPlaceholder = "__FrameworkVersion__"
 
 Write-Host "Current script directory: $PSScriptRoot"
 
@@ -73,9 +77,12 @@ Function ApplyVersion([string]$templatePath)
 	$filePath = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($_.FullName), [System.IO.Path]::GetFileNameWithoutExtension($_.FullName))
 
 	# Copy template file to file with same name but without ".template"
-	# Whilst coying, replace __Version__ placeholder with version
+	# Whilst coying, replace __Version__ placeholder with version, and __FrameworkVersion__ with the version of files used with .Net Framework.
 	# Must use encoding ascii. bower register (used further below) does not understand other encodings, such as utf 8.
 	(Get-Content $templatePath) | Foreach-Object {$_ -replace $versionPlaceholder, $version} | Out-File -encoding ascii $filePath
+
+	# $currentFrameworkVersion lives in GeneratorConstants.ps1
+	(Get-Content $templatePath) | Foreach-Object {$_ -replace $frameworkVersionPlaceholder, $currentFrameworkVersion} | Out-File -encoding ascii $filePath
 
     Write-Host "Updated version in : $filePath"
 }
