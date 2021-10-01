@@ -280,13 +280,13 @@ function Generate-JsnlogConfigurations($publishing)
 
 	if ($publishing) 
 	{ 
-		# Commit any changes and deletions (but not additions) to Github
+		Write-Host "Common.Logging packages are no longer published, because fixed at version 2.30.0. Only get build to generate packages in local nuget package dir."
 
-		git commit -a -m "$version"
+		# git commit -a -m "$version"
 				
 		# Push to Github		
-		git branch $version
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.configurations.git --all
+		# git branch $version
+		# git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.configurations.git --all
 	}
 
 	cd ..
