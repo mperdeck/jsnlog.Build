@@ -325,7 +325,7 @@ function Generate-JsnlogSimpleWorkingDemos($publishing)
 	cd ..
 }
 
-function Generate-Website($publishing)
+function Generate Website($publishing)
 {
 	Write-ActionHeading "Generate Website for Core $currentCoreVersion, Framework $currentFrameworkVersion, JSNLog.js $currentJSNLogJsVersion" $publishing
 	if ($WhatIf) { return }
@@ -413,6 +413,12 @@ if ($GenerateEverything -and $Publish)
 }
 
 cd ..
+
+if ($GenerateEverything -or $Publish)
+{
+	Write-ActionHeading('You cannot generate everything and publish as well, because Core, Framework and JSNLog.js now use different versions', $false)
+	Exit
+}
 
 if ($GenerateWebsite -or $GenerateJsnLog -or $GenerateEverything -or $UpdateVersions)
 {
