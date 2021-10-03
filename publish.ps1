@@ -4,9 +4,6 @@
 
 [CmdletBinding()]
 Param(
-  [Parameter(Mandatory=$True,Position=1, HelpMessage="Version number of new version. Format: <Major Version>.<Minor Version>.<Bug Fix>.<Build Number>[-prerelease]")]
-  [string]$version,
-
   [Parameter(Mandatory=$False, HelpMessage="Generates everything, including JSNLog and website.")]
   [switch]$GenerateEverything,
 
@@ -43,16 +40,6 @@ $nugetLoggingVerbosity = $LoggingVerbosity
 if ($nugetLoggingVerbosity -eq 'minimal') { $nugetLoggingVerbosity = 'quiet' } 
 if ($nugetLoggingVerbosity -eq 'diagnostic') { $nugetLoggingVerbosity = 'detailed' } 
 
-if ($version -like '-')
-{
-	# Using a prerelease version
-	if ($GenerateWebsite)
-	{
-		Write-Host "The web site should not be published with a prerelease version to avoid confusion with the latest normal version."
-		Exit
-	}
-}
-
 if ($UpdateVersions -And $Publish)
 {
 	Write-Host "To publish anything, use a Generate... option."
@@ -64,6 +51,7 @@ if ($UpdateVersions -And $Publish)
 
 $versionPlaceholder = "__Version__"
 $frameworkVersionPlaceholder = "__FrameworkVersion__"
+$JSNLogJsVersionPlaceholder = "__JSNLogJsVersion__"
 
 Write-Host "Current script directory: $PSScriptRoot"
 
@@ -77,12 +65,16 @@ Function ApplyVersion([string]$templatePath)
 	$filePath = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($_.FullName), [System.IO.Path]::GetFileNameWithoutExtension($_.FullName))
 
 	# Copy template file to file with same name but without ".template"
-	# Whilst coying, replace __Version__ placeholder with version, and __FrameworkVersion__ with the version of files used with .Net Framework.
+	# Whilst coying, replace __Version__ placeholder with version, and __FrameworkVersion__ with the version of files used with .Net Framework, 
+	# and __JSNLogJsVersion__ with the version of files used with JSNLog.js.
 	# Must use encoding ascii. bower register (used further below) does not understand other encodings, such as utf 8.
-	(Get-Content $templatePath) | Foreach-Object {$_ -replace $versionPlaceholder, $version} | Out-File -encoding ascii $filePath
 
 	# $currentFrameworkVersion lives in GeneratorConstants.ps1
-	(Get-Content $templatePath) | Foreach-Object {$_ -replace $frameworkVersionPlaceholder, $currentFrameworkVersion} | Out-File -encoding ascii $filePath
+	(Get-Content $templatePath) | `
+		Foreach-Object {$_ -replace $versionPlaceholder, $currentCoreVersion} | `
+		Foreach-Object {$_ -replace $frameworkVersionPlaceholder, $currentFrameworkVersion} | `
+		Foreach-Object {$_ -replace $JSNLogJsVersionPlaceholder, $currentJSNLogJsVersion} | `
+		Out-File -encoding ascii $filePath
 
     Write-Host "Updated version in : $filePath"
 }
@@ -92,7 +84,7 @@ Function GenerateConfigPackage([string]$packageName, $publishing)
 	cd FinalPackages
 	cd $packageName
 	nuget pack $packageName.nuspec -OutputDirectory C:\Dev\@NuGet\GeneratedPackages
-	if ($publishing) { nuget push C:\Dev\@NuGet\GeneratedPackages\$packageName.$version.nupkg $apiKey -Source https://api.nuget.org/v3/index.json }
+	if ($publishing) { nuget push C:\Dev\@NuGet\GeneratedPackages\$packageName.$currentFrameworkVersion.nupkg $apiKey -Source https://api.nuget.org/v3/index.json }
 	cd ..
 	cd ..
 }
@@ -126,7 +118,7 @@ function Write-SubActionHeading($actionHeading)
 
 function Generate-JsnlogJs($publishing)
 {
-	Write-ActionHeading "Generate-JsnlogJs" $publishing
+	Write-ActionHeading "Generate JsnlogJs $currentJSNLogJsVersion" $publishing
 	if ($WhatIf) { return }
 
 	cd jsnlog.js		
@@ -144,13 +136,13 @@ function Generate-JsnlogJs($publishing)
 	if ($publishing) 
 	{
 		# Commit any changes and deletions (but not additions), such as to the minified file
-		git commit -a -m "$version"
+		git commit -a -m "$currentJSNLogJsVersion"
 				
 		# Push to Github		
-		git tag v$version
+		git tag v$currentJSNLogJsVersion
 		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git --tags
 
-		git branch $version
+		git branch $currentJSNLogJsVersion
 		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git --all
 
 		# About Bower and Component
@@ -176,7 +168,7 @@ function Generate-JsnlogJs($publishing)
 
 function Generate-JsnlogNodeJs($publishing)
 {
-	Write-ActionHeading "Generate-JsnlogNodeJs" $publishing
+	Write-ActionHeading "Generate JsnlogNodeJs $currentJSNLogJsVersion" $publishing
 	if ($WhatIf) { return }
 
 	cd jsnlog-nodejs
@@ -184,13 +176,13 @@ function Generate-JsnlogNodeJs($publishing)
 	if ($publishing) 
 	{
 		# Commit any changes and deletions (but not additions), such as to the minified file
-		git commit -a -m "$version"
+		git commit -a -m "$currentJSNLogJsVersion"
 				
 		# Push to Github		
-		git tag v$version
+		git tag v$currentJSNLogJsVersion
 		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git --tags
 
-		git branch $version
+		git branch $currentJSNLogJsVersion
 		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git --all
 
 		# Push to NPM
@@ -208,7 +200,7 @@ function Generate-Jsnlog($publishing)
 	# ---------------
 	# JSNLog for .Net
 
-	Write-ActionHeading "Generate-Jsnlog" $publishing
+	Write-ActionHeading "Generate Jsnlog Core $currentCoreVersion`n(framework version is no longer generated)" $publishing
 	if ($WhatIf) { return }
 
 	cd jsnlog\jsnlog
@@ -235,7 +227,7 @@ function Generate-Jsnlog($publishing)
 	# msbuild /t:pack uses the package definition inside the jsnlog.csproj file
 	Write-SubActionHeading "Build the jsnlog package"
 	& msbuild /t:Clean /p:Configuration=Release /verbosity:$LoggingVerbosity
-	& msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$version /verbosity:$LoggingVerbosity
+	& msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$currentCoreVersion /verbosity:$LoggingVerbosity
 
     # Build final versions of JSNLog.ClassLibrary and JSNLog.AspNetCore
 #	& msbuild /t:pack /p:Configuration=Release /p:PackageId=JSNLog.ClassLibrary /p:PackageVersion=99.0.0 /p:Description="DO NOT USE. Instead simply use the JSNLog package." /verbosity:$LoggingVerbosity
@@ -245,7 +237,7 @@ function Generate-Jsnlog($publishing)
 
 	if ($publishing) 
 	{ 
-		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$version.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
+		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$currentCoreVersion.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
 #		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.ClassLibrary.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
 #		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.AspNetCore.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
 	}
@@ -254,13 +246,13 @@ function Generate-Jsnlog($publishing)
 
 	if ($publishing) {
 		# Commit any changes and deletions (but not additions) to Github
-		git commit -a -m "$version"
+		git commit -a -m "$currentCoreVersion"
 				
 		# Push to Github		
-		git tag v$version
+		git tag v$currentCoreVersion
 		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git --tags
 
-		git branch $version
+		git branch $currentCoreVersion
 		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git --all
 	}
 
@@ -272,7 +264,7 @@ function Generate-JsnlogConfigurations($publishing)
 	# JSNLog itself and jsnlog.js must be processed before processing jsnlog.configurations,
 	# because configurations relies on files compiled in the earlier steps.
 
-	Write-ActionHeading "Generate-JsnlogConfigurations" $publishing
+	Write-ActionHeading "Generate JsnlogConfigurations $currentFrameworkVersion" $publishing
 	if ($WhatIf) { return }
 
 	cd jsnlog.configurations
@@ -299,12 +291,22 @@ function Generate-JsnlogConfigurations($publishing)
 	cd ..
 }
 
+function HeadingForSites($publishing)
+{
+	$heading = "Generate JsnlogSimpleWorkingDemos for Core $currentCoreVersion, Framework $currentFrameworkVersion, JSNLog.js $currentJSNLogJsVersion"
+	if ($publishing)
+	{
+		$heading += "`n("
+	}
+
+}
+
 function Generate-JsnlogSimpleWorkingDemos($publishing)
 {
 	# ---------------
 	# jsnlogSimpleWorkingDemos
 
-	Write-ActionHeading "Generate-JsnlogSimpleWorkingDemos" $publishing
+	Write-ActionHeading "Generate JsnlogSimpleWorkingDemos for Core $currentCoreVersion, Framework $currentFrameworkVersion, JSNLog.js $currentJSNLogJsVersion" $publishing
 	if ($WhatIf) { return }
 
 	cd jsnlogSimpleWorkingDemos
@@ -325,7 +327,7 @@ function Generate-JsnlogSimpleWorkingDemos($publishing)
 
 function Generate-Website($publishing)
 {
-	Write-ActionHeading "Generate-Website" $publishing
+	Write-ActionHeading "Generate Website for Core $currentCoreVersion, Framework $currentFrameworkVersion, JSNLog.js $currentJSNLogJsVersion" $publishing
 	if ($WhatIf) { return }
 
 	cd jsnlog.website\website
@@ -402,6 +404,12 @@ function ProcessTemplates()
 			Write-Error -ErrorRecord $errorRecord
 		}
 	}
+}
+
+if ($GenerateEverything -and $Publish)
+{
+	Write-ActionHeading('You cannot generate everything and publish as well, because Core, Framework and JSNLog.js now use different versions', $false)
+	Exit
 }
 
 cd ..
