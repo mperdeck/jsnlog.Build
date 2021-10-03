@@ -116,6 +116,18 @@ function Write-SubActionHeading($actionHeading)
 	Write-Host "-----------------------------------------------------------"
 }
 
+# Creates a tag, pushes it and pushes all branches.
+# You have to merge your version branch into master before calling this.
+function TagPush([string]$tagName, [string]$repoUrl)
+{
+	# create and push tag
+	git tag $tagName
+	git push $repoUrl --tags
+
+	# push all branches
+	git push $repoUrl --all
+}
+
 function Generate-JsnlogJs($publishing)
 {
 	Write-ActionHeading "Generate JsnlogJs $currentJSNLogJsVersion" $publishing
@@ -135,15 +147,7 @@ function Generate-JsnlogJs($publishing)
 
 	if ($publishing) 
 	{
-		# Commit any changes and deletions (but not additions), such as to the minified file
-		git commit -a -m "$currentJSNLogJsVersion"
-				
-		# Push to Github		
-		git tag v$currentJSNLogJsVersion
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git --tags
-
-		git branch $currentJSNLogJsVersion
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git --all
+		TagPush "v$currentJSNLogJsVersion" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git'
 
 		# About Bower and Component
 		#
@@ -175,15 +179,7 @@ function Generate-JsnlogNodeJs($publishing)
 	
 	if ($publishing) 
 	{
-		# Commit any changes and deletions (but not additions), such as to the minified file
-		git commit -a -m "$currentJSNLogJsVersion"
-				
-		# Push to Github		
-		git tag v$currentJSNLogJsVersion
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git --tags
-
-		git branch $currentJSNLogJsVersion
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git --all
+		TagPush "v$currentJSNLogJsVersion" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git'
 
 		# Push to NPM
 		# Note that you have to register with NPM once, with the command
@@ -245,15 +241,7 @@ function Generate-Jsnlog($publishing)
 	cd ..
 
 	if ($publishing) {
-		# Commit any changes and deletions (but not additions) to Github
-		git commit -a -m "$currentCoreVersion"
-				
-		# Push to Github		
-		git tag v$currentCoreVersion
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git --tags
-
-		git branch $currentCoreVersion
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git --all
+		TagPush "v$currentCoreVersion" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git'
 	}
 
 	cd ..
@@ -301,6 +289,11 @@ function HeadingForSites($publishing)
 
 }
 
+function SiteTag()
+{
+	return "Core$currentCoreVersion-Framework$currentFrameworkVersion-JSNLog.js$currentJSNLogJsVersion";
+}
+
 function Generate-JsnlogSimpleWorkingDemos($publishing)
 {
 	# ---------------
@@ -313,13 +306,8 @@ function Generate-JsnlogSimpleWorkingDemos($publishing)
 
 	if ($publishing) 
 	{ 
-		# Commit any changes and deletions (but not additions) to Github
-
-		git commit -a -m "$version"
-				
-		# Push to Github		
-		git branch $version
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlogSimpleWorkingDemos.git --all
+		$siteTag = SiteTag
+		TagPush "$siteTag" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlogSimpleWorkingDemos.git'
 	}
 
 	cd ..
@@ -361,15 +349,8 @@ function Generate Website($publishing)
 
 	if ($publishing) 
 	{ 
-		# Commit any changes and deletions (but not additions) to Github
-		git commit -a -m "$version"
-				
-		# Push to Github		
-		git tag v$version
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.website.git --tags
-
-		git branch $version
-		git push https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.website.git --all
+		$siteTag = SiteTag
+		TagPush "$siteTag" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.website.git'
 	}
 
 	cd ..
