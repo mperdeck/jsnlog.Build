@@ -201,41 +201,16 @@ function Generate-Jsnlog($publishing)
 
 	cd jsnlog\jsnlog
 
-	# Upload Nuget package for .Net version
-
-	# Use nuget pack JSNLog.nuspec instead of nuget pack JNSLog.csproj,
-	# otherwise the dependencies groups get mushed into a single group-less set (!)
-	# See http://stackoverflow.com/questions/25556416/nuget-dependency-framework-targeting-not-working-when-packaging-using-the-cspro
-
 	del C:\Dev\@NuGet\GeneratedPackages\JSNLog.*
 	
-	if (Test-Path C:\Users\$windowsUsername\.nuget\packages\jsnlog) 
-	{
-		Remove-Item C:\Users\$windowsUsername\.nuget\packages\jsnlog -Force -Recurse
-	}
+	nuget locals all -clear
 	
-	if (Test-Path C:\Users\$windowsUsername\.nuget\packages\jsnlog.aspnetcore) 
-	{
-		Remove-Item C:\Users\$windowsUsername\.nuget\packages\jsnlog.aspnetcore -Force -Recurse
-	}
-	
-	# Build the jsnlog package
-	# msbuild /t:pack uses the package definition inside the jsnlog.csproj file
-	Write-SubActionHeading "Build the jsnlog package"
-	& msbuild /t:Clean /p:Configuration=Release /verbosity:$LoggingVerbosity
-	& msbuild /t:pack /p:Configuration=Release /p:PackageVersion=$currentCoreVersion /verbosity:$LoggingVerbosity
-
-    # Build final versions of JSNLog.ClassLibrary and JSNLog.AspNetCore
-#	& msbuild /t:pack /p:Configuration=Release /p:PackageId=JSNLog.ClassLibrary /p:PackageVersion=99.0.0 /p:Description="DO NOT USE. Instead simply use the JSNLog package." /verbosity:$LoggingVerbosity
-#	& msbuild /t:pack /p:Configuration=Release /p:PackageId=JSNLog.AspNetCore /p:PackageVersion=99.0.0 /p:Description="DO NOT USE. Instead simply use the JSNLog package." /verbosity:$LoggingVerbosity
-
-    Move-Item bin\release\*.nupkg C:\Dev\@NuGet\GeneratedPackages
+	# Restore, Build and Pack the jsnlog package
+	dotnet pack --force --output C:\Dev\@NuGet\GeneratedPackages --verbosity $LoggingVerbosity --configuration Release -p:PackageVersion=$currentCoreVersion
 
 	if ($publishing) 
 	{ 
 		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$currentCoreVersion.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
-#		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.ClassLibrary.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
-#		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.AspNetCore.99.0.0.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
 	}
 
 	cd ..
@@ -313,7 +288,7 @@ function Generate-JsnlogSimpleWorkingDemos($publishing)
 	cd ..
 }
 
-function Generate Website($publishing)
+function Generate-Website($publishing)
 {
 	Write-ActionHeading "Generate Website for Core $currentCoreVersion, Framework $currentFrameworkVersion, JSNLog.js $currentJSNLogJsVersion" $publishing
 	if ($WhatIf) { return }
@@ -321,7 +296,7 @@ function Generate Website($publishing)
 	cd jsnlog.website\website
 	
 	# Copy in latest version of jsnlog.dll
-	Copy-Item "C:\Dev\JSNLog\jsnlog\\jsnlog\bin\Release\net452\JSNLog.dll" ..\Dependencies
+	Copy-Item "C:\Dev\JSNLog\jsnlog\jsnlog\bin\Release\netstandard2.0\JSNLog.dll" ..\Dependencies
 
     # Backup the existing site in the %temp% dir
 	$websiteFolderPath = "E:\Web sites\jsnlog"
@@ -394,12 +369,6 @@ if ($GenerateEverything -and $Publish)
 }
 
 cd ..
-
-if ($GenerateEverything -or $Publish)
-{
-	Write-ActionHeading('You cannot generate everything and publish as well, because Core, Framework and JSNLog.js now use different versions', $false)
-	Exit
-}
 
 if ($GenerateWebsite -or $GenerateJsnLog -or $GenerateEverything -or $UpdateVersions)
 {
