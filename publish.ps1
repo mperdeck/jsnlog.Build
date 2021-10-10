@@ -39,6 +39,8 @@ Param(
 # include generator constants
 ."..\jsnlog.SimpleWorkingDemoGenerator\Generator\helpers\GeneratorConstants.ps1"
 
+."..\jsnlog.SimpleWorkingDemoGenerator\Generator\Common\Helpers.ps1"
+
 $nugetLoggingVerbosity = $LoggingVerbosity
 if ($nugetLoggingVerbosity -eq 'minimal') { $nugetLoggingVerbosity = 'quiet' } 
 if ($nugetLoggingVerbosity -eq 'diagnostic') { $nugetLoggingVerbosity = 'detailed' } 
@@ -123,12 +125,16 @@ function Write-SubActionHeading($actionHeading)
 # You have to merge your version branch into master before calling this.
 function TagPush([string]$tagName, [string]$repoUrl)
 {
+	OpenLoggingBlock "TagPush"
+
 	# create and push tag
-	git tag $tagName
-	git push $repoUrl --tags
+	InvokeCommand "git tag" "git tag $tagName"
+	InvokeCommand "git push tag" "git push $repoUrl --tags"
 
 	# push all branches
-	git push $repoUrl --all
+	InvokeCommand "git push branch" "git push $repoUrl --all"
+
+	CloseLoggingBlock "TagPush"
 }
 
 function Generate-JsnlogJs($publishing)
@@ -150,7 +156,7 @@ function Generate-JsnlogJs($publishing)
 
 	if ($publishing) 
 	{
-		TagPush "v$currentJSNLogJsVersion" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.js.git'
+		TagPush "v$currentJSNLogJsVersion" 'git@github.com:mperdeck/jsnlog.js.git'
 
 		# About Bower and Component
 		#
@@ -182,7 +188,7 @@ function Generate-JsnlogNodeJs($publishing)
 	
 	if ($publishing) 
 	{
-		TagPush "v$currentJSNLogJsVersion" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog-nodejs.git'
+		TagPush "v$currentJSNLogJsVersion" 'git@github.com:mperdeck/jsnlog-nodejs.git'
 
 		# Push to NPM
 		# Note that you have to register with NPM once, with the command
@@ -213,13 +219,13 @@ function Generate-Jsnlog($publishing)
 
 	if ($publishing) 
 	{ 
-		& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$currentCoreVersion.nupkg $apiKey  -Source https://api.nuget.org/v3/index.json
+		InvokeCommand "Pushing JSNLog package $currentCoreVersion to Nuget" "& nuget push C:\Dev\@NuGet\GeneratedPackages\JSNLog.$currentCoreVersion.nupkg $apiKey -Source https://api.nuget.org/v3/index.json"
 	}
 
 	cd ..
 
 	if ($publishing) {
-		TagPush "v$currentCoreVersion" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.git'
+		TagPush "v$currentCoreVersion" 'git@github.com:mperdeck/jsnlog.git'
 	}
 
 	cd ..
@@ -285,7 +291,7 @@ function Generate-JsnlogSimpleWorkingDemos($publishing)
 	if ($publishing) 
 	{ 
 		$siteTag = SiteTag
-		TagPush "$siteTag" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlogSimpleWorkingDemos.git'
+		TagPush "$siteTag" 'git@github.com:mperdeck/jsnlogSimpleWorkingDemos.git'
 	}
 
 	cd ..
@@ -328,7 +334,7 @@ function Generate-Website($publishing)
 	if ($publishing) 
 	{ 
 		$siteTag = SiteTag
-		TagPush "$siteTag" 'https://${githubUsername}:${githubPassword}@github.com/$githubUsername/jsnlog.website.git'
+		TagPush "$siteTag" 'git@github.com:mperdeck/jsnlog.website.git'
 	}
 
 	cd ..
