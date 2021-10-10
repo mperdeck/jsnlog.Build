@@ -16,6 +16,9 @@ Param(
   [Parameter(Mandatory=$False, HelpMessage="Generates the web site.")]
   [switch]$GenerateWebsite,
 
+  [Parameter(Mandatory=$False, HelpMessage="Generates the logging package adapters for Common.Logging.")]
+  [switch]$GenerateJsnLogConfigurations,
+
   [Parameter(Mandatory=$False, HelpMessage="Only goes through templated files to update __Version__.")]
   [switch]$UpdateVersions,
 
@@ -391,9 +394,13 @@ if ($GenerateJsnLog -or $GenerateEverything)
 	Generate-Jsnlog $Publish
 }
 
-if ($GenerateEverything) 
+if ($GenerateJsnLogConfigurations -or $GenerateEverything) 
 {
 	Generate-JsnlogConfigurations $Publish
+}
+
+if ($GenerateEverything) 
+{
 	Generate-JsnlogSimpleWorkingDemos $Publish
 }
 
