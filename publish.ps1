@@ -73,23 +73,6 @@ function Expand-ZIPFile($file, $destination)
 	}
 }
 
-function Write-ActionHeading($actionHeading, $publishing)
-{
-	Write-Host ""
-	Write-Host "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-	Write-Host $actionHeading
-    if ($publishing) { Write-Host "publishing" }
-	Write-Host "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-}
-
-function Write-SubActionHeading($actionHeading)
-{
-	Write-Host ""
-	Write-Host "-----------------------------------------------------------"
-	Write-Host $actionHeading
-	Write-Host "-----------------------------------------------------------"
-}
-
 function Generate-JsnlogJs($publishing)
 {
 	Write-ActionHeading "Generate JsnlogJs $currentJSNLogJsVersion" $publishing
