@@ -51,38 +51,7 @@ if ($UpdateVersions -And $Publish)
 	Exit
 }
 
-# ---------------
-# Constants
-
-$versionPlaceholder = "__Version__"
-$frameworkVersionPlaceholder = "__FrameworkVersion__"
-$JSNLogJsVersionPlaceholder = "__JSNLogJsVersion__"
-
 Write-Host "Current script directory: $PSScriptRoot"
-
-
-# ---------------
-# Update version numbers
-
-Function ApplyVersion([string]$templatePath)
-{
-	# Get file path without the ".template" extension  
-	$filePath = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($_.FullName), [System.IO.Path]::GetFileNameWithoutExtension($_.FullName))
-
-	# Copy template file to file with same name but without ".template"
-	# Whilst coying, replace __Version__ placeholder with version, and __FrameworkVersion__ with the version of files used with .Net Framework, 
-	# and __JSNLogJsVersion__ with the version of files used with JSNLog.js.
-	# Must use encoding ascii. bower register (used further below) does not understand other encodings, such as utf 8.
-
-	# $currentFrameworkVersion lives in GeneratorConstants.ps1
-	(Get-Content $templatePath) | `
-		Foreach-Object {$_ -replace $versionPlaceholder, $currentCoreVersion} | `
-		Foreach-Object {$_ -replace $frameworkVersionPlaceholder, $currentFrameworkVersion} | `
-		Foreach-Object {$_ -replace $JSNLogJsVersionPlaceholder, $currentJSNLogJsVersion} | `
-		Out-File -encoding ascii $filePath
-
-    Write-Host "Updated version in : $filePath"
-}
 
 Function GenerateConfigPackage([string]$packageName, $publishing)
 {
@@ -119,22 +88,6 @@ function Write-SubActionHeading($actionHeading)
 	Write-Host "-----------------------------------------------------------"
 	Write-Host $actionHeading
 	Write-Host "-----------------------------------------------------------"
-}
-
-# Creates a tag, pushes it and pushes all branches.
-# You have to merge your version branch into master before calling this.
-function TagPush([string]$tagName, [string]$repoUrl)
-{
-	OpenLoggingBlock "TagPush"
-
-	# create and push tag
-	InvokeCommand "git tag" "git tag $tagName"
-	InvokeCommand "git push tag" "git push $repoUrl --tags"
-
-	# push all branches
-	InvokeCommand "git push branch" "git push $repoUrl --all"
-
-	CloseLoggingBlock "TagPush"
 }
 
 function Generate-JsnlogJs($publishing)
@@ -353,24 +306,6 @@ function Remove-CachedVersions()
 	}
 }
 
-function ProcessTemplates()
-{
-	Write-ActionHeading "Process templates" $FALSE
-	if ($WhatIf) { return }
-
-	# Visit all files in current directory and its sub directories that end in ".template", and call ApplyVersion on them.
-	# Some directories with node_modules have names that are too long to deal with for PowerShell. You can't filter them out in the get-childitem, because the
-	# filter itself throws the "too long path" exception. So catch the exceptions in an $err variable and then process them.
-	get-childitem '.' -File -recurse -force -ErrorAction SilentlyContinue -ErrorVariable err | ?{($_.extension -eq ".template")} | ForEach-Object { ApplyVersion $_.FullName }
-	foreach ($errorRecord in $err)
-	{
-		if (!($errorRecord.Exception -is [System.IO.PathTooLongException]))
-		{
-			Write-Error -ErrorRecord $errorRecord
-		}
-	}
-}
-
 if ($GenerateEverything -and $Publish)
 {
 	Write-ActionHeading('You cannot generate everything and publish as well, because Core, Framework and JSNLog.js now use different versions', $false)
@@ -381,7 +316,7 @@ cd ..
 
 if ($GenerateWebsite -or $GenerateJsnLog -or $GenerateEverything -or $UpdateVersions)
 {
-	ProcessTemplates
+	ProcessTemplates $currentCoreVersion $currentFrameworkVersion $currentJSNLogJsVersion
 }
 
 if ($GenerateJsnLog -or $GenerateEverything) 
