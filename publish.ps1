@@ -1,5 +1,8 @@
 # =================================================
-# Run this script to publish all versions of JSNLog to their environments (Nuget, Bower, etc.)
+# Run this script to publish all versions of JSNLog to their environments (Nuget, NPM, etc.)
+#
+# The version numbers that will be used for the server side and client side components are in
+# C:\Dev\JSNLog\jsnlog.SimpleWorkingDemoGenerator\Generator\helpers\GeneratorConstants.ps1
 # =================================================
 
 [CmdletBinding()]
@@ -247,13 +250,13 @@ function Generate-Website($publishing)
 	$websiteFolderPath = "E:\Web sites\jsnlog"
 	if (Test-Path -Path $websiteFolderPath) { Copy-Item $websiteFolderPath $env:temp\jsnlog.$(get-date -f yyyyMMddTHHmmss) -Recurse }
 
-	# C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
+	# C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin
 	# has to be in the path for powershell to find msbuild
 	#
 	# This publishes the Website project, using the publish profile "jsnlog".
 	# This publishes to 
 	# E:\Web sites\jsnlog
-	msbuild WebSite.csproj /p:DeployOnBuild=true /p:PublishProfile=jsnlog /p:VisualStudioVersion=15.0 /p:Configuration=Release /verbosity:$LoggingVerbosity
+	msbuild WebSite.csproj /p:DeployOnBuild=true /p:PublishProfile=jsnlog /p:VisualStudioVersion=17.0 /p:Configuration=Release /verbosity:$LoggingVerbosity
 
 	if ($publishing) 
 	{ 
@@ -299,7 +302,7 @@ cd ..
 
 if ($GenerateWebsite -or $GenerateJsnLog -or $GenerateEverything -or $UpdateVersions)
 {
-	ProcessTemplates $currentCoreVersion $currentFrameworkVersion $currentJSNLogJsVersion
+	ProcessTemplates "." $currentCoreVersion $currentFrameworkVersion $currentJSNLogJsVersion
 }
 
 if ($GenerateJsnLog -or $GenerateEverything) 
