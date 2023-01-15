@@ -32,6 +32,9 @@ Param(
   [ValidateSet('quiet','minimal','normal','detailed','diagnostic')]
   [System.String]$LoggingVerbosity = 'minimal',
 
+  [Parameter(Mandatory=$False, HelpMessage="Generates packages with debug information")]
+  [switch]$GenerateDebugPackages,
+
   [Parameter(Mandatory=$False, HelpMessage="Only shows which actions will be taken, does not do anything")]
   [switch]$WhatIf
 )
@@ -154,7 +157,14 @@ function Generate-Jsnlog($publishing)
 	nuget locals all -clear
 	
 	# Restore, Build and Pack the jsnlog package
-	dotnet pack --force --output C:\Dev\@NuGet\GeneratedPackages --verbosity $LoggingVerbosity --configuration Release -p:PackageVersion=$currentCoreVersion
+	$configurationOption = "--configuration Release"
+
+	if ($GenerateDebugPackages)
+	{
+		$configurationOption = "--configuration Debug --include-source --include-symbols"
+	}
+	
+	InvokeCommand "Building JSNLog package" "& dotnet pack --force --output C:\Dev\@NuGet\GeneratedPackages --verbosity $LoggingVerbosity $configurationOption -p:PackageVersion=$currentCoreVersion"
 
 	if ($publishing) 
 	{ 
