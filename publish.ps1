@@ -89,13 +89,6 @@ function Generate-JsnlogJs($publishing)
 	# Compile jsnlog.ts to .js and create .min.js file. Also update all copies of jsnlog.js etc. everywhere.
 	.\minify.bat
 
-    # Copy TypeScript definitions to DefinitelyTyped project
-	$jsnlogFolderPath = "C:\Dev\DefinitelyTyped\jsnlog"
-	if (Test-Path -Path $jsnlogFolderPath) { Remove-Item $jsnlogFolderPath -Force -Recurse }
-    New-Item $jsnlogFolderPath -type directory
-	copy Definitions\jsnlog.d.ts $jsnlogFolderPath
-	copy Definitions\jsnlog-tests.ts $jsnlogFolderPath
-
 	if ($publishing) 
 	{
 		TagPush "v$currentJSNLogJsVersion" 'git@github.com:mperdeck/jsnlog.js.git'
